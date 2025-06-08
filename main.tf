@@ -1,4 +1,11 @@
 terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.87.0"
+    }
+  }
+
   backend "s3" {
     bucket         = "cadd-project"
     key            = "terraform.tfstate"
@@ -9,7 +16,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-west-2" # Change this to your preferred region
+  region = "eu-west-2"
 }
 
 resource "aws_vpc" "main" {
@@ -42,9 +49,9 @@ resource "aws_route_table" "rt" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "eu-west-2a"
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -58,8 +65,8 @@ resource "aws_route_table_association" "a" {
 }
 
 resource "aws_security_group" "sg" {
-  name        = "allow-ssh & HTTP"
-  description = "Allow SSH & web traffic inbound traffic"
+  name        = "allow-ssh-http"
+  description = "Allow SSH and HTTP traffic"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -89,35 +96,23 @@ resource "aws_security_group" "sg" {
 }
 
 resource "aws_instance" "web" {
-  ami           = "ami-0bc8d5c547360e648" # replace with the Amazon Linux AMI value on your account
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.main.id
-  vpc_security_group_ids = [aws_security_group.sg.id]
+  ami                         = "ami-0bc8d5c547360e648"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.main.id
+  vpc_security_group_ids      = [aws_security_group.sg.id]
+
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              # Update the instance and install necessary packages
               yum update -y
               yum install -y httpd wget unzip
-              
-              # Start Apache and enable it to start on boot
               systemctl start httpd
               systemctl enable httpd
-              
-              # Navigate to the web root directory
               cd /var/www/html
-              
-              # Download a CSS template directly
               wget https://www.free-css.com/assets/files/free-css-templates/download/page284/built-better.zip
-              
-              # Unzip the template and move the files to the web root
               unzip built-better.zip -d /var/www/html/
               mv /var/www/html/html/* /var/www/html/
-              
-              # Clean up unnecessary files
               rm -r /var/www/html/html
               rm built-better.zip
-              
-              # Restart Apache to apply changes
               systemctl restart httpd
               EOF
   )
