@@ -26,23 +26,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: ✅ Confirm Init Command
-        run: echo "🔥 RUNNING: terraform init -reconfigure"
-
-      - name: Terraform Init (with confirmation)
+      - name: ✅ Confirm AWS_REGION is available
+        run: |
+          echo "✅ AWS_REGION is set to: $AWS_REGION"
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init (with confirmation)
         run: |
           echo "🔥 RUNNING terraform init -reconfigure"
           terraform init -reconfigure
-
-      - name: Terraform Plan
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Plan
         run: terraform plan
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve
