@@ -26,13 +26,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: ✅ Debug Step – Confirm Workflow Version
-        run: echo "✅ This is the latest terraform.yml running"
+      - name: ✅ Confirm Init Command
+        run: echo "🔥 RUNNING: terraform init -reconfigure"
 
-      - name: Terraform Init
+      - name: Terraform Init (with confirmation)
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform init -reconfigure
+        run: |
+          echo "🔥 RUNNING terraform init -reconfigure"
+          terraform init -reconfigure
 
       - name: Terraform Plan
         env:
